@@ -10,7 +10,7 @@ ENV OS_GIT_MAJOR=0
 ENV OS_GIT_MINOR=1
 ENV OS_GIT_PATCH=0
 
-COPY ./opa-openshift /opt/app-root/src/opa-openshift
+COPY . /opt/app-root/src/opa-openshift
 WORKDIR /opt/app-root/src/opa-openshift
 
 RUN go build -tags strictfipsruntime -a -ldflags '-s -w' -o ./opa-openshift .
