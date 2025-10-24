@@ -1,0 +1,43 @@
+FROM registry-proxy.engineering.redhat.com/rh-osbs/openshift-golang-builder:v1.23.9-202506111225.g6c23478.el9 AS builder
+
+ENV GOEXPERIMENT=strictfipsruntime
+ENV CGO_ENABLED=1
+ENV GOOS=linux
+ENV GOFLAGS=""
+
+ENV BUILD_VERSION=0.1.0
+ENV OS_GIT_MAJOR=0
+ENV OS_GIT_MINOR=1
+ENV OS_GIT_PATCH=0
+
+COPY ./opa-openshift /opt/app-root/src/opa-openshift
+WORKDIR /opt/app-root/src/opa-openshift
+
+RUN go build -tags strictfipsruntime -a -ldflags '-s -w' -o ./opa-openshift .
+
+FROM registry.redhat.io/rhel9-6-els/rhel-minimal:9.6@sha256:2bdf19e0877fdbb0696330159ed72a12deef8a60eed819c4e2fc0064147b39df
+
+COPY --from=builder /opt/app-root/src/opa-openshift/opa-openshift /usr/bin/opa-openshift
+
+EXPOSE 80
+ENTRYPOINT ["/usr/bin/opa-openshift"]
+
+ARG OPA_OPENSHIFT_COMMIT
+ARG OPA_OPENSHIFT_URL
+LABEL com.redhat.component="opa-openshift-container" \
+      cpe="cpe:/a:redhat:logging:6.3::el9" \
+      description="An OPA-compatible API for making OpenShift access review requests" \
+      distribution-scope="subscription" \
+      io.k8s.description="An OPA-compatible API for making OpenShift access review requests" \
+      io.k8s.display-name="OPA OpenShift" \
+      io.openshift.maintainer.component="Logging" \
+      io.openshift.maintainer.product="OpenShift Container Platform" \
+      io.openshift.tags="openshift,logging,loki" \
+      maintainer="AOS Logging <team-logging@redhat.com>" \
+      name="openshift-logging/opa-openshift-rhel9" \
+      release="6.3" \
+      summary="An OPA-compatible API for making OpenShift access review requests" \
+      url="https://github.com/observatorium/opa-openshift/" \
+      vendor="Red Hat, Inc." \
+      version_minor="v0.1" \
+      version=v0.1.0
